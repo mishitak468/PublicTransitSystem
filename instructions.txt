@@ -1,0 +1,13 @@
+Installation and Setup
+Prerequisites
+- MySQL Server (8.0+)
+- MySQL C-Connector libraries (libmysqlclient-dev or mysql-client)
+- GCC Compiler and Make
+
+1. Database Instalization: mysql -u root -p < sql/schema.sql
+2. Compilation: make
+3. Secore Execution: 
+export DB_PASS="your_MYSQL_password"
+export DYLD_LIBRARY_PATH=/usr/local/mysql/lib
+./transit_system
+4. Run Analytics: mysql -u root -p < sql/analytics.sql
