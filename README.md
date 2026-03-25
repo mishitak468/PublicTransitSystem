@@ -6,7 +6,7 @@ System Architecture
 The project is divided into three distinct layers:
 
 1. Ingestion Layer (C): A systems-level parser reads raw CSV data, sanitizes strings, and resolves data inconsistencies.
-2. Database Layer (MySQL): The relational schema is optimized with foreign key constraints and indexed lookups for efficient transit schedule management.
+2. Database Layer (SQL): The relational schema is optimized with foreign key constraints and indexed lookups for efficient transit schedule management.
 3. Analytical Layer (SQL): This layer includes complex queries for pathfinding and bottleneck detection within the transit network.
 
 Key Technical Features
