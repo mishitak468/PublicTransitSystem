@@ -1,7 +1,10 @@
-MYSQL_PATH = /usr/local/mysql
+# Path from your 'brew --prefix libpq' command
+PG_BASE = /opt/homebrew/opt/libpq
 CC = gcc
-CFLAGS = -I$(MYSQL_PATH)/include
-LIBS = -L$(MYSQL_PATH)/lib -lmysqlclient -Wl,-rpath,$(MYSQL_PATH)/lib
+
+# Adding the exact include and lib paths
+CFLAGS = -I$(PG_BASE)/include
+LIBS = -L$(PG_BASE)/lib -lpq
 
 all:
 	$(CC) src/main.c -o transit_system $(CFLAGS) $(LIBS)
