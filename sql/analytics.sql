@@ -1,50 +1,46 @@
-USE TransitSystem;
+-- 1. Setup Production Table
+DROP TABLE IF EXISTS schedules CASCADE;
 
--- 1. MULTI-HOP PATHFINDING
--- Find a journey from North Station (A) to the New Destination (Z)
--- This involves finding a route that connects A to a hub, and a hub to Z.
-SELECT
-    leg1.route_id AS first_line,
-    leg1.station_id AS start_node,
-    leg2.station_id AS transfer_hub,
-    leg2.route_id AS second_line,
-    leg2.arrival_time AS final_arrival
-FROM Schedule leg1
-    JOIN Schedule leg2 ON leg1.station_id <> leg2.station_id
+CREATE TABLE schedules (
+    id SERIAL PRIMARY KEY,
+    route_id INT NOT NULL,
+    station_id INT NOT NULL,
+    scheduled TIMESTAMPTZ NOT NULL,
+    actual TIMESTAMPTZ NOT NULL
+);
+
+-- 2. Setup Error Logging Table (The missing piece!)
+DROP TABLE IF EXISTS ingestion_errors;
+
+CREATE TABLE ingestion_errors (
+    error_id SERIAL PRIMARY KEY,
+    raw_line_content TEXT,
+    error_reason TEXT,
+    detected_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Create Analytics View
+CREATE OR REPLACE VIEW v_transit_anomalies AS
+SELECT *
+FROM (
+        SELECT *, AVG(
+                EXTRACT(
+                    EPOCH
+                    FROM (actual - scheduled)
+                ) / 60
+            ) OVER (
+                PARTITION BY
+                    route_id
+                ORDER BY scheduled ROWS BETWEEN 10 PRECEDING
+                    AND CURRENT ROW
+            ) as rolling_avg
+        FROM (
+                SELECT *, EXTRACT(
+                        EPOCH
+                        FROM (actual - scheduled)
+                    ) / 60 as delay_min
+                FROM schedules
+            ) s
+    ) a
 WHERE
-    leg1.station_id = 'A'
-    AND leg2.station_id = 'Z'
-    AND leg1.route_id IN (
-        SELECT route_id
-        FROM Schedule
-        WHERE
-            station_id = leg2.station_id
-    )
-    AND leg2.arrival_time > leg1.departure_time;
-
--- 2. NETWORK CONGESTION ANALYSIS (Bottlenecks)
--- Identifies "Hotspots" where more than 2 different routes converge
-SELECT
-    s.station_id,
-    st.station_name,
-    COUNT(DISTINCT s.route_id) as route_count,
-    GROUP_CONCAT(DISTINCT s.route_id) as lines_serving_station
-FROM Schedule s
-    JOIN Stations st ON s.station_id = st.station_id
-GROUP BY
-    s.station_id,
-    st.station_name
-HAVING
-    route_count > 1
-ORDER BY route_count DESC;
-
--- 3. SYSTEM SLACK CALCULATION
--- Calculates the "Layover" time at each station to find efficiency gaps
-SELECT
-    route_id,
-    station_id,
-    TIMEDIFF(departure_time, arrival_time) as idle_time
-FROM Schedule
-WHERE
-    arrival_time IS NOT NULL
-    AND departure_time IS NOT NULL;
+    delay_min > (rolling_avg * 2.5);
