@@ -1,43 +1,37 @@
-import os
+import psycopg2
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sqlalchemy import create_engine
 
-# Create the docs directory if it doesn't exist
-if not os.path.exists('docs'):
-    os.makedirs('docs')
-    print("Created 'docs/' directory for project assets.")
 
-# Setup Connection using SQLAlchemy (Fixes the UserWarning)
-db_pass = os.getenv("DB_PASS")
-# Format: mysql+mysqlconnector://user:password@host/database
-engine = create_engine(
-    f"mysql+mysqlconnector://root:{db_pass}@localhost/TransitSystem")
+def generate_heatmap():
+    # Connect to PostgreSQL
+    conn = psycopg2.connect(dbname="TransitSystem",
+                            user="postgres", host="localhost")
 
-# Updated Query using the correct table name 'Schedule'
-query = """
-SELECT 
-    station_id, 
-    HOUR(arrival_time) as hr, 
-    AVG(TIMESTAMPDIFF(MINUTE, arrival_time, arrival_time)) as delay 
-FROM Schedule 
-GROUP BY station_id, hr
-"""
+    # Query the 98,000+ clean records
+    query = "SELECT route_id, station_id, EXTRACT(EPOCH FROM (actual - scheduled))/60 as delay_min FROM schedules"
+    df = pd.read_sql(query, conn)
 
-try:
-    df = pd.read_sql(query, engine)
+    # Pivot for Heatmap (Route vs Station)
+    # We'll look at the top 20 routes for clarity
+    top_routes = df.groupby('route_id')['delay_min'].mean().nlargest(20).index
+    df_filtered = df[df['route_id'].isin(top_routes)]
 
-    if df.empty:
-        print("No data found in the Schedule table. Run the C engine first!")
-    else:
-        pivot_df = df.pivot(index='station_id', columns='hr', values='delay')
-        plt.figure(figsize=(12, 8))
-        sns.heatmap(pivot_df, cmap='YlOrRd', annot=True)
-        plt.title('Transit Congestion Heatmap: Delay Severity by Hour')
-        plt.savefig('docs/delay_heatmap.png')
-        print("Success! Heatmap saved to docs/delay_heatmap.png")
-        plt.show()
+    pivot_table = df_filtered.pivot_table(
+        index='route_id', columns='station_id', values='delay_min', aggfunc='mean')
 
-except Exception as e:
-    print(f"Error: {e}")
+    # Plot
+    plt.figure(figsize=(12, 8))
+    sns.heatmap(pivot_table, cmap="YlOrRd", annot=False)
+    plt.title("Transit Delay Network Analysis (100,000 Samples)")
+    plt.xlabel("Station ID")
+    plt.ylabel("Route ID")
+
+    plt.savefig("delay_heatmap.png")
+    print("Heatmap generated: delay_heatmap.png")
+    conn.close()
+
+
+if __name__ == "__main__":
+    generate_heatmap()
