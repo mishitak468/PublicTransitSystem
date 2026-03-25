@@ -1,11 +1,19 @@
-# Ignore the compiled executable
+# Compiled Binaries
 transit_system
-
-# Ignore Mac system files
-.DS_Store
-
-# Ignore VS Code settings
-.vscode/
-
-# Ignore object files
+transit_system_engine
 *.o
+
+# Data & Logs
+data/raw_transit_data.csv
+*.log
+docs/*.png
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# OS specific
+.DS_Store
