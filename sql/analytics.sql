@@ -1,4 +1,4 @@
--- 1. Setup Production Table
+-- production table
 DROP TABLE IF EXISTS schedules CASCADE;
 
 CREATE TABLE schedules (
@@ -9,7 +9,7 @@ CREATE TABLE schedules (
     actual TIMESTAMPTZ NOT NULL
 );
 
--- 2. Setup Error Logging Table (The missing piece!)
+-- error logging table
 DROP TABLE IF EXISTS ingestion_errors;
 
 CREATE TABLE ingestion_errors (
@@ -19,7 +19,7 @@ CREATE TABLE ingestion_errors (
     detected_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Create Analytics View
+-- analytics view
 CREATE OR REPLACE VIEW v_transit_anomalies AS
 SELECT *
 FROM (

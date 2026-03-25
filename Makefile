@@ -1,8 +1,6 @@
-# Path from your 'brew --prefix libpq' command
 PG_BASE = /opt/homebrew/opt/libpq
 CC = gcc
 
-# Adding the exact include and lib paths
 CFLAGS = -I$(PG_BASE)/include
 LIBS = -L$(PG_BASE)/lib -lpq
 

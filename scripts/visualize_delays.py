@@ -9,12 +9,12 @@ def generate_heatmap():
     conn = psycopg2.connect(dbname="TransitSystem",
                             user="postgres", host="localhost")
 
-    # Query the 98,000+ clean records
+    # Query clean records
     query = "SELECT route_id, station_id, EXTRACT(EPOCH FROM (actual - scheduled))/60 as delay_min FROM schedules"
     df = pd.read_sql(query, conn)
 
     # Pivot for Heatmap (Route vs Station)
-    # We'll look at the top 20 routes for clarity
+    # top 20 routes
     top_routes = df.groupby('route_id')['delay_min'].mean().nlargest(20).index
     df_filtered = df[df['route_id'].isin(top_routes)]
 

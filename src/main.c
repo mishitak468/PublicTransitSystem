@@ -17,7 +17,7 @@ int main()
 
   FILE *fp = fopen("data/raw_transit_data.csv", "r");
   char line[1024], original_line[1024];
-  fgets(line, sizeof(line), fp); // Skip header
+  fgets(line, sizeof(line), fp);
 
   int success_count = 0, error_count = 0;
 

@@ -1,32 +1,21 @@
-CREATE DATABASE IF NOT EXISTS TransitSystem;
-
-USE TransitSystem;
-
-DROP TABLE IF EXISTS Schedule;
-
-DROP TABLE IF EXISTS Stations;
-
-CREATE TABLE Stations (
-    station_id CHAR(1) PRIMARY KEY,
-    station_name VARCHAR(100)
+-- optimized schema
+CREATE TABLE stations (
+    station_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    lat DECIMAL(9, 6),
+    lon DECIMAL(9, 6)
 );
 
-CREATE TABLE Schedule (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    route_id INT,
-    station_id CHAR(1),
-    arrival_time TIME NULL,
-    departure_time TIME NULL,
-    FOREIGN KEY (station_id) REFERENCES Stations (station_id)
-) ENGINE = InnoDB;
+CREATE TABLE schedules (
+    id SERIAL PRIMARY KEY,
+    route_id INTEGER NOT NULL,
+    station_id INTEGER REFERENCES stations (station_id),
+    scheduled_arrival TIMESTAMPTZ NOT NULL,
+    actual_arrival TIMESTAMPTZ,
+    status VARCHAR(50) DEFAULT 'on-time'
+);
 
-INSERT INTO
-    Stations
-VALUES ('A', 'North Terminal'),
-    ('B', 'Central Park'),
-    ('C', 'Union Hub'),
-    ('D', 'South Ferry'),
-    ('E', 'West Side'),
-    ('F', 'East Gate'),
-    ('G', 'Industrial Zone'),
-    ('Z', 'New Horizon Terminal');
+-- indexing for high-performance lookups
+CREATE INDEX idx_schedule_station ON schedules (station_id);
+
+CREATE INDEX idx_schedule_arrival ON schedules (scheduled_arrival);
