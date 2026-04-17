@@ -6,9 +6,12 @@
 
 ## What It Does
 
-This project models a real transit network from the ground up. Raw schedule CSV data is ingested by a C-based processing engine, cleaned and transformed, and loaded into a normalized PostgreSQL database. From there, SQL analytical queries identify hub stations, trace routes across the network, and surface schedule bottlenecks. A stochastic delay simulation adds realistic variability to arrival times, and a Python-generated heatmap visualizes where delays cluster across the network.
+This project recreates how a real transit system works behind the scenes.
+It starts with raw schedule data in CSV files, which is pulled into a C-based processing engine. There, the data is cleaned up, reshaped, and loaded into a normalized PostgreSQL database. On top of that, a set of SQL queries is used to find major hub stations, follow routes across the network, and spot where schedules tend to break down.
 
-The goal was to build something closer to what a transit authority's backend actually looks like — not a tutorial project, but a real data pipeline with meaningful design decisions at every layer.
+To make things more realistic, a stochastic delay simulation injects variability into arrival times, and a Python script generates a heatmap that shows where delays cluster across the system.
+
+The idea was to build something that actually resembles a transit authority’s backend with intentional design choices at every layer.
 
 ---
 
